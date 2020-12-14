@@ -1,0 +1,148 @@
+---
+title: "RReport"
+author: "Pasiewicz & Mila"
+date: "10 grudnia 2020"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Wykorzystane biblioteki
+```{r install, echo=FALSE, warning=FALSE}
+#install.packages("corrplot")
+#install.packages("lemon")
+#install.packages('e1071')
+#install.packages('caTools')
+#install.packages('dplyr')
+#install.packages('ggplot2')
+```
+W trakcie analizy danych wykorzystano następujące biblioteki:
+```{r libraries, warning=FALSE, eval=FALSE}
+library('corrplot')
+library('e1071')
+library(caTools)
+library(dplyr)
+library(ggplot2)
+library(Metrics)
+```
+
+# Powtarzalność wyników ?? TO CHECK
+
+# Wczytanie danych z pliku
+
+Wczytanie danych z pliku *.csv odbywa się poprzez wykorzystanie podstawowego polecenia:
+```{r import}
+dataset = read.csv('Life_Expectancy_Data.csv')
+dataset <- as.data.frame(dataset)
+chart_dataset <- dataset
+
+knitr::kable(head(dataset,1), format="markdown")
+```
+
+# Przetwarzanie brakujących danych
+
+```{r encode}
+encode_ordinal <- function(x, order = unique(x)) {
+  x <- as.numeric(factor(x, levels = order, exclude = NULL))
+  x
+}
+
+dataset[["Country"]] <- encode_ordinal(dataset[["Country"]])
+dataset[["Status"]] <- encode_ordinal(dataset[["Status"]])
+
+for(i in 1:ncol(dataset)){
+  dataset[is.na(dataset[,i]), i] <- mean(dataset[,i], na.rm = TRUE)
+}
+```
+
+# Podsumowanie zbioru
+
+Zbiór danych zawiera:
+
+
+# Podział zbioru na uczący i testowy
+
+W celu poprawności przeprowadzanego procesu wykorzystujacego modeel regresji przed jakimkolwiek podglądem dostępnych danych oraz ich wartości należy podzielić zbiór danych na zbiór uczący i testowy. Zbiór testowy zostannie wykorzystany dopiero przy sprawdzeniu trafności i jakości stworoznego modelu. Dane zostaly podzielone w następujący sposób:
+* zbiór uczący - 75%
+* zbiór testowy -25%
+
+```{r split}
+set.seed(123)
+split = caTools::sample.split(dataset$Life.expectancy, SplitRatio = 3/4)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+```
+
+# Analiza wartości atrybutów
+
+Poniżej przedstawiono podstawowe dane o poszczególnych atrybutach występujących w zbiorze danych:
+```{r summary, echo=FALSE}
+summary(dataset)
+```
+
+# Korelacja pomiędzy poszczególnymi atrybutami
+
+```{r corr_vis}
+corr_matrix <- cor(dataset)
+corrplot::corrplot(corr_matrix, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+
+
+# Wykres (Interaktywny) mean lifespan for country od year
+
+```{r}
+sliderInput("year", "Choose year:", min = 2000, max = 2015, value = 2008)
+
+selectInput(
+      "countries",
+      "Select Countries", 
+      choices = unique(chart_dataset$Country),
+      multiple = TRUE
+      )
+
+mydata <- reactive({
+  library(dplyr)
+  dplyr::filter(chart_dataset, Year == input$year, Country %in% input$countries)
+})
+
+renderPlot({
+
+  # draw the histogram with the specified number of bins
+  ggplot2::ggplot(data = mydata(), ggplot2::aes(x = Country, y = Life.expectancy)) +
+    ggplot2::geom_bar(stat='identity') +
+    ggplot2::geom_text(ggplot2::aes(label=Country))+
+
+    ggplot2::ggtitle('Truth or Bluff (Random Forest Regression)') +
+    ggplot2::xlab('Level') +
+    ggplot2::ylab('Salary')
+})
+
+```
+
+# Stworzyć model (regresor)
+
+```{r regressor}
+training_set[,-4] = scale(training_set[-4])
+test_set[,-4] = scale(test_set[-4])
+
+
+regressor = svm(formula = Life.expectancy ~.,
+                data = training_set,
+                type = 'eps-regression')
+
+y_pred = predict(regressor, test_set[-4])
+```
+
+# Analiza atrybutów modelu
+
+W celu określenia jakości stworzonego modelu regresji obliczono miarę RSME. Dla naszego modelu SVM wyniosła ona:
+
+```{r values}
+Metrics::rmse(test_set[4], y_pred)
+```
