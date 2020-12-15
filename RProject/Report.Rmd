@@ -206,3 +206,6 @@ Z kolei niski współczynnik średniej długości życia okazał się być najwi
 
 Najwyższy ogólny wpływ na średnią długość życia miały więc produktywność zużywania zasobów, średnia liczba lat edukacji oraz śmiertelność wśród dorosłych.
 
+
+# Podsumowanie
+Przeprowadzone badania pozwoliły określić, które czynniki mają największy wpływ na długość życia ludzi w poszczególnych krajach. Wyniki nie okazały się zbytnio zaskakujące – najbardziej skorelowane z badaną statystyką okazały się w większości popularnie znane problemy. W programie zwizualizowano także długość życia ludzi w poszczególnych krajach - w zależności od roku, a na koniec stworzono model, który w zadowalający sposób przewidywał tę wartość. W projekcie udało się więc zidentyfikować czynniki mające wpływ na długość życia mieszkańców w poszczególnych krajach oraz wykorzystać je do odpowiedniej predykcji.
