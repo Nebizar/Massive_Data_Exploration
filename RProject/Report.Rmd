@@ -128,7 +128,7 @@ Jak widać w zbiorze danych mamy do czynienia z dwoma atrybutami ... Na powyższ
 * Median - mediana wartości atrybutu,
 * Mean - średnia wartość atrybutu,
 * 3rd Qu. - 
-* Max - wartośc maksymalna
+* Max - wartość maksymalna
 
 # Korelacja pomiędzy poszczególnymi atrybutami
 
@@ -195,3 +195,14 @@ W celu określenia jakości stworzonego modelu regresji obliczono miarę RSME. D
 ```{r values}
 Metrics::rmse(test_set[4], y_pred)
 ```
+
+
+# Wnioski
+Przeprowadzone badania pozwalają stwierdzić, które parametry mają najwyższy wpływ na długość życia ludzi w poszczególnych krajach. 
+
+Parametrami najwidoczniej wpływającymi pozytywnie na długość życia mieszkańców są przede wszystkim wskaźnik określający produktywność zużywania zasobów oraz średnia liczba lat edukacji, zaś w nieco mniejszym stopniu status kraju (rozwinięty / rozwijający się) oraz szczepienie dzieci przeciwko odpowiednim chorobom (polio / błonica, tężec i krztusiec). 
+
+Z kolei niski współczynnik średniej długości życia okazał się być najwidoczniej skorelowany bezpośrednio z liczbą zgonów wśród dorosłych,  a także (w nieco mniejszym stopniu) śmiertelnością spowodowaną zakażeniami HIV/AIDS i niedowagą ludzi w wieku 5-19 lat (a więc i najpewniej z niedożywieniem / problemem głodu w danym kraju).
+
+Najwyższy ogólny wpływ na średnią długość życia miały więc produktywność zużywania zasobów, średnia liczba lat edukacji oraz śmiertelność wśród dorosłych.
+
