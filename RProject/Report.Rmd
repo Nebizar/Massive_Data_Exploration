@@ -168,8 +168,8 @@ renderPlot({
     ggplot2::geom_text(ggplot2::aes(label=Country))+
 
     ggplot2::ggtitle('Truth or Bluff (Random Forest Regression)') +
-    ggplot2::xlab('Level') +
-    ggplot2::ylab('Salary')
+    ggplot2::xlab('Country') +
+    ggplot2::ylab('Length of life')
 })
 
 ```
