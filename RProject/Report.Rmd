@@ -13,7 +13,7 @@ runtime: shiny
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Wykorzystane biblioteki
+# Wykorzystane biblioteki 
 ```{r install, echo=FALSE, warning=FALSE}
 #install.packages("corrplot")
 #install.packages("lemon")
