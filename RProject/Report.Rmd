@@ -1,5 +1,5 @@
 ---
-title: "RReport"
+title: "RReport - Analiza zbioru danych"
 author: "Pasiewicz & Mila"
 date: "10 grudnia 2020"
 output: 
@@ -12,6 +12,16 @@ runtime: shiny
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# Wnioski z analizy
+Przeprowadzone badania pozwalają stwierdzić, które parametry mają najwyższy wpływ na długość życia ludzi w poszczególnych krajach. 
+
+Parametrami najwidoczniej wpływającymi pozytywnie na długość życia mieszkańców są przede wszystkim wskaźnik określający produktywność zużywania zasobów oraz średnia liczba lat edukacji, zaś w nieco mniejszym stopniu status kraju (rozwinięty / rozwijający się) oraz szczepienie dzieci przeciwko odpowiednim chorobom (polio / błonica, tężec i krztusiec). 
+
+Z kolei niski współczynnik średniej długości życia okazał się być najwidoczniej skorelowany bezpośrednio z liczbą zgonów wśród dorosłych,  a także (w nieco mniejszym stopniu) śmiertelnością spowodowaną zakażeniami HIV/AIDS i niedowagą ludzi w wieku 5-19 lat (a więc i najpewniej z niedożywieniem / problemem głodu w danym kraju).
+
+Najwyższy ogólny wpływ na średnią długość życia miały więc produktywność zużywania zasobów, średnia liczba lat edukacji oraz śmiertelność wśród dorosłych.
+
 
 # Wykorzystane biblioteki 
 ```{r install, echo=FALSE, warning=FALSE}
@@ -124,10 +134,10 @@ summary(training_set)
 Jak widać w zbiorze danych mamy do czynienia z dwoma atrybutami ... Na powyższym podumowaniu, dla każdego atrybuty policzone następujace miary:
 
 * Min - wartość minimalna atrybutu,
-* 1st Qu. - 
+* 1st Qu. - kwartyl dolny (rzędu 1/4),
 * Median - mediana wartości atrybutu,
 * Mean - średnia wartość atrybutu,
-* 3rd Qu. - 
+* 3rd Qu. - kwartyl górny (rzędu 3/4),
 * Max - wartość maksymalna
 
 # Korelacja pomiędzy poszczególnymi atrybutami
@@ -167,7 +177,7 @@ renderPlot({
     ggplot2::geom_bar(stat='identity') +
     ggplot2::geom_text(ggplot2::aes(label=Country))+
 
-    ggplot2::ggtitle('Truth or Bluff (Random Forest Regression)') +
+    ggplot2::ggtitle('Avarage lifespan in selected countries') +
     ggplot2::xlab('Country') +
     ggplot2::ylab('Length of life')
 })
@@ -185,7 +195,7 @@ regressor = e1071::svm(formula = Life.expectancy ~.,
                 data = training_set,
                 type = 'eps-regression')
 
-y_pred = predict(regressor, test_set[-4])
+y_pred = predict(regressor, test_set[,-4])
 ```
 
 # Analiza atrybutów modelu
@@ -193,19 +203,11 @@ y_pred = predict(regressor, test_set[-4])
 W celu określenia jakości stworzonego modelu regresji obliczono miarę RSME. Dla naszego modelu SVM wyniosła ona:
 
 ```{r values}
-Metrics::rmse(test_set[4], y_pred)
+print(Metrics::rmse(test_set[,4], as.numeric(y_pred)))
 ```
 
-
-# Wnioski
-Przeprowadzone badania pozwalają stwierdzić, które parametry mają najwyższy wpływ na długość życia ludzi w poszczególnych krajach. 
-
-Parametrami najwidoczniej wpływającymi pozytywnie na długość życia mieszkańców są przede wszystkim wskaźnik określający produktywność zużywania zasobów oraz średnia liczba lat edukacji, zaś w nieco mniejszym stopniu status kraju (rozwinięty / rozwijający się) oraz szczepienie dzieci przeciwko odpowiednim chorobom (polio / błonica, tężec i krztusiec). 
-
-Z kolei niski współczynnik średniej długości życia okazał się być najwidoczniej skorelowany bezpośrednio z liczbą zgonów wśród dorosłych,  a także (w nieco mniejszym stopniu) śmiertelnością spowodowaną zakażeniami HIV/AIDS i niedowagą ludzi w wieku 5-19 lat (a więc i najpewniej z niedożywieniem / problemem głodu w danym kraju).
-
-Najwyższy ogólny wpływ na średnią długość życia miały więc produktywność zużywania zasobów, średnia liczba lat edukacji oraz śmiertelność wśród dorosłych.
-
+Taka wartość oznacza, że stworzony model średnio myli się o 2.79 lat w przypadku oczekiwanej długości życia obywateli danego państwa. Można uznać to za zadowalający wynik.
 
 # Podsumowanie
+
 Przeprowadzone badania pozwoliły określić, które czynniki mają największy wpływ na długość życia ludzi w poszczególnych krajach. Wyniki nie okazały się zbytnio zaskakujące – najbardziej skorelowane z badaną statystyką okazały się w większości popularnie znane problemy. W programie zwizualizowano także długość życia ludzi w poszczególnych krajach - w zależności od roku, a na koniec stworzono model, który w zadowalający sposób przewidywał tę wartość. W projekcie udało się więc zidentyfikować czynniki mające wpływ na długość życia mieszkańców w poszczególnych krajach oraz wykorzystać je do odpowiedniej predykcji.

@@ -1,18 +1,32 @@
 ---
-title: "RReport"
+title: "RReport - Analiza zbioru danych"
 author: "Pasiewicz & Mila"
 date: "10 grudnia 2020"
-output: 
+output:
+  md_document:
+    toc: yes
+  pdf_document:
+    toc: yes
   html_document:
-    toc: true
-    toc_float: true
+    toc: yes
+    toc_float: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Wykorzystane biblioteki
+# Wnioski z analizy
+Przeprowadzone badania pozwalają stwierdzić, które parametry mają najwyższy wpływ na długość życia ludzi w poszczególnych krajach. 
+
+Parametrami najwidoczniej wpływającymi pozytywnie na długość życia mieszkańców są przede wszystkim wskaźnik określający produktywność zużywania zasobów oraz średnia liczba lat edukacji, zaś w nieco mniejszym stopniu status kraju (rozwinięty / rozwijający się) oraz szczepienie dzieci przeciwko odpowiednim chorobom (polio / błonica, tężec i krztusiec). 
+
+Z kolei niski współczynnik średniej długości życia okazał się być najwidoczniej skorelowany bezpośrednio z liczbą zgonów wśród dorosłych,  a także (w nieco mniejszym stopniu) śmiertelnością spowodowaną zakażeniami HIV/AIDS i niedowagą ludzi w wieku 5-19 lat (a więc i najpewniej z niedożywieniem / problemem głodu w danym kraju).
+
+Najwyższy ogólny wpływ na średnią długość życia miały więc produktywność zużywania zasobów, średnia liczba lat edukacji oraz śmiertelność wśród dorosłych.
+
+
+# Wykorzystane biblioteki 
 ```{r install, echo=FALSE, warning=FALSE}
 #install.packages("corrplot")
 #install.packages("lemon")
@@ -23,15 +37,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 W trakcie analizy danych wykorzystano następujące biblioteki:
 ```{r libraries, warning=FALSE, eval=FALSE}
-library('corrplot')
-library('e1071')
+library(corrplot)
+library(e1071)
 library(caTools)
 library(dplyr)
 library(ggplot2)
 library(Metrics)
 ```
-
-# Powtarzalność wyników ?? TO CHECK
 
 # Wczytanie danych z pliku
 
@@ -44,7 +56,49 @@ chart_dataset <- dataset
 knitr::kable(head(dataset,1), format="markdown")
 ```
 
+# Podsumowanie zbioru
+
+Zbiór danych zawiera:
+```{r size}
+print(nrow(dataset))
+print(ncol(dataset))
+```
+
+Zbiór danych skłąda sie z następujących atrybutóW:
+
+* Country: kraj,
+* Year: rok,
+* Status: status kraju: “Developing” dla krajów rozwijających się i “Developed” dla krajów rozwiniętych,
+* Life expectancy : oczekiwana długość życia w momencie urodzenia w danym kraju w danym roku,
+* Adult Mortality: liczba zgonów wśród dorosłych (liczba śmierci między 15 a 60 rokiem życia na 1000 mieszkańców)
+* infant deaths: liczba zgonów wśród dzieci na 1000 mieszkańców,
+* Alcohol: spożycie alkoholu (w litrach na mieszkańca powyżej 15 r.ż.),
+* percentage expenditure: procent PKB przeznaczony na ochronę zdrowia,
+* Hepatitis B: procent dzieci 1-rocznych zaszczepionych przeciw WZW B,
+* Measles: liczba zgłoszonych przypadków odry na 1000 mieszkańców,
+* BMI: średnia wartość współczynnika BMI wśród populacji,
+* under-five deaths: liczba zgonów dzieci poniżej 5 r.ż na 1000 mieszkańców,
+* Polio: procent 1-rocznych dzieci zaszczepionych przeciw Polio,
+* Total expenditure: procent rządowych wydatków na ochronę zdrowia w stosunku do wszystich wydatków w budżecie,
+* Diphtheria: procent dzieci 1-rocznych zaszczepionych na błonicę, tężec i krztusiec,
+* HIV/AIDS: liczba zgonów z powodu zakażenia HIV/AIDS wśród dzieci do 4 r.ż na 1000 żywych urodzeń,
+* GDP: PKB na mieszkańca (w USD),
+* Population: liczba mieszkańców kraju,
+* thinness 10-19 years: procent osób w wieku 10-19 lat z niedowagą,
+* thinness 5-9 years: procent dzieci w wieku 5-9 lat z niedowagą,
+* Income composition of resources: Wskaźnik określający produktywność żużywania zasobów (0-1)
+* Schooling: średnia liczba lat edukacji.
+
+
 # Przetwarzanie brakujących danych
+
+Łatwo możemy zauważyć, że zbiór danych zawiera obserwacje z brakującymi danymi. W takim wypadku można wykonać jedną z następujących operacji:
+
+* usunąć ze zbioru rekordy z pustymi atrybutami,
+* usunąć atrybuty zawierające puste wartości,
+* wygenerować wartości atrybutóW które są puste w celu uzupełnienia zbioru.
+
+W przypadku naszego zbioru danych użyjemy funkcji uzupełniającej puste pola średnią wartością danego atrybutu z obserwacji, które tą wartość posiadają. Wykorzystanie pozostałych metod skutkowałoby utratą dużej części informacji, na co w przypadku pracy na relatywnie małym zbiorze danych nie możemy sobie pozwolić.
 
 ```{r encode}
 encode_ordinal <- function(x, order = unique(x)) {
@@ -59,10 +113,6 @@ for(i in 1:ncol(dataset)){
   dataset[is.na(dataset[,i]), i] <- mean(dataset[,i], na.rm = TRUE)
 }
 ```
-
-# Podsumowanie zbioru
-
-Zbiór danych zawiera:
 
 
 # Podział zbioru na uczący i testowy
@@ -82,46 +132,43 @@ test_set = subset(dataset, split == FALSE)
 
 Poniżej przedstawiono podstawowe dane o poszczególnych atrybutach występujących w zbiorze danych:
 ```{r summary, echo=FALSE}
-summary(dataset)
+summary(training_set)
 ```
+Jak widać w zbiorze danych mamy do czynienia z dwoma atrybutami ... Na powyższym podumowaniu, dla każdego atrybuty policzone następujace miary:
+
+* Min - wartość minimalna atrybutu,
+* 1st Qu. - kwartyl dolny (rzędu 1/4),
+* Median - mediana wartości atrybutu,
+* Mean - średnia wartość atrybutu,
+* 3rd Qu. - kwartyl górny (rzędu 3/4),
+* Max - wartość maksymalna
 
 # Korelacja pomiędzy poszczególnymi atrybutami
 
+Poniższa grafika prezentuje korelacje pomiędzy poszczególnymi atrybutami dostępnymi w zbiorze danych.
+
 ```{r corr_vis}
-corr_matrix <- cor(dataset)
+corr_matrix <- cor(training_set)
 corrplot::corrplot(corr_matrix, type = "upper", order = "hclust", 
-         tl.col = "black", tl.srt = 45)
+         tl.col = "black", tl.srt = 90)
 ```
 
 
-# Wykres (Interaktywny) mean lifespan for country od year
+# Graficzna reprezentacja średniej długości wieku w zależności od roku i kraju
+
+Poniżej przedstawiono wykres słupkowy reprezentujący średnią długość życia w poszczególnych państwach w wybranym roku. Opcja wykresu interaktywnego dostępna jest tylko po użyciu opcji "Run Document" po otwarciu pliku w śrdoowisku RStudio. W przypadku plików html i md wykres jest nieinteraktywny i pokazuje jedynie poglądowo dane wybranych kilku Państw w roku 2008.
 
 ```{r}
-sliderInput("year", "Choose year:", min = 2000, max = 2015, value = 2008)
 
-selectInput(
-      "countries",
-      "Select Countries", 
-      choices = unique(chart_dataset$Country),
-      multiple = TRUE
-      )
+data_filtered <- dplyr::filter(chart_dataset, Year == 2008, Country %in% c('Poland', 'Germany', 'China', 'Angola', 'Canada', 'Zimbabwe'))
+# draw the histogram with the specified number of bins
+ggplot2::ggplot(data = data_filtered, ggplot2::aes(x = Country, y = Life.expectancy)) +
+  ggplot2::geom_bar(stat='identity') +
+  ggplot2::geom_text(ggplot2::aes(label=Country))+
 
-mydata <- reactive({
-  library(dplyr)
-  dplyr::filter(chart_dataset, Year == input$year, Country %in% input$countries)
-})
-
-renderPlot({
-
-  # draw the histogram with the specified number of bins
-  ggplot2::ggplot(data = mydata(), ggplot2::aes(x = Country, y = Life.expectancy)) +
-    ggplot2::geom_bar(stat='identity') +
-    ggplot2::geom_text(ggplot2::aes(label=Country))+
-
-    ggplot2::ggtitle('Truth or Bluff (Random Forest Regression)') +
-    ggplot2::xlab('Level') +
-    ggplot2::ylab('Salary')
-})
+  ggplot2::ggtitle('Avarage lifespan in selected countries') +
+  ggplot2::xlab('Country') +
+  ggplot2::ylab('Length of life')
 
 ```
 
@@ -132,11 +179,11 @@ training_set[,-4] = scale(training_set[-4])
 test_set[,-4] = scale(test_set[-4])
 
 
-regressor = svm(formula = Life.expectancy ~.,
+regressor = e1071::svm(formula = Life.expectancy ~.,
                 data = training_set,
                 type = 'eps-regression')
 
-y_pred = predict(regressor, test_set[-4])
+y_pred = predict(regressor, test_set[,-4])
 ```
 
 # Analiza atrybutów modelu
@@ -144,5 +191,11 @@ y_pred = predict(regressor, test_set[-4])
 W celu określenia jakości stworzonego modelu regresji obliczono miarę RSME. Dla naszego modelu SVM wyniosła ona:
 
 ```{r values}
-Metrics::rmse(test_set[4], y_pred)
+print(Metrics::rmse(test_set[,4], as.numeric(y_pred)))
 ```
+
+Taka wartość oznacza, że stworzony model średnio myli się o 2.79 lat w przypadku oczekiwanej długości życia obywateli danego państwa. Można uznać to za zadowalający wynik.
+
+# Podsumowanie
+
+Przeprowadzone badania pozwoliły określić, które czynniki mają największy wpływ na długość życia ludzi w poszczególnych krajach. Wyniki nie okazały się zbytnio zaskakujące – najbardziej skorelowane z badaną statystyką okazały się w większości popularnie znane problemy. W programie zwizualizowano także długość życia ludzi w poszczególnych krajach - w zależności od roku, a na koniec stworzono model, który w zadowalający sposób przewidywał tę wartość. W projekcie udało się więc zidentyfikować czynniki mające wpływ na długość życia mieszkańców w poszczególnych krajach oraz wykorzystać je do odpowiedniej predykcji.
