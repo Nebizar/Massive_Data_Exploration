@@ -41,3 +41,5 @@ vignettes/*.pdf
 
 # Python data
 PythonProject/data/*.csv
+
+PythonProject/.ipynb_checkpoints
